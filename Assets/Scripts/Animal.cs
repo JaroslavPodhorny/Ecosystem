@@ -105,13 +105,14 @@ public class Animal : Entity
         switch (highestNeed)
         {
             case "hunger":
-                if (EntityManager.Instance.queryPlant(position) != null)
+                Plant nearestPlant = EntityManager.Instance.queryPlant(position);
+                if (nearestPlant != null)
                 {
+                    Debug.Log(position);
+                    Debug.Log(nearestPlant.position);
                     if (path.Count == 0)
                     {
-                        path = Pathfinding.FindPath(position, EntityManager.Instance.queryPlant(position).position);
-                        Debug.Log(EntityManager.Instance.queryPlant(position).position);
-                        Debug.Log(position);
+                        path = Pathfinding.FindPath(position, nearestPlant.position);
                     }
                     Debug.Log($"Path found: {path.Count}");
                     currentState = State.GoingForFood;
@@ -126,6 +127,8 @@ public class Animal : Entity
             case "thirst":
                 if (FindWater() != new Vector2Int(-1, -1))
                 {
+                    Debug.Log(position);
+                    Debug.Log(FindWater());
                     if (path.Count == 0)
                     {
                         path = Pathfinding.FindPath(position, FindWater());
@@ -191,8 +194,7 @@ public class Animal : Entity
                 }
                 else
                 {
-                    Vector2Int currentPosition = new Vector2Int((int)transform.position.x, (int)transform.position.z);
-                    targetPosition = currentPosition + path[currentPathIndex];
+                    targetPosition = position + path[currentPathIndex];
                     isMoving = true;
                     Move();
                     currentPathIndex++;

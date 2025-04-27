@@ -160,7 +160,38 @@ public class GameTerrain : MonoBehaviour
         }
     }
 
+    public static Vector2Int ChooseAdjacentPosition(Vector2Int plantPosition)
+    {
+        // Define all 8 possible directions (cardinal + diagonal)
+        Vector2Int[] directions = new Vector2Int[]
+        {
+            new Vector2Int(1, 0),  // Right
+            new Vector2Int(-1, 0), // Left
+            new Vector2Int(0, 1),  // Up
+            new Vector2Int(0, -1), // Down
+            new Vector2Int(1, 1),  // Top-right
+            new Vector2Int(-1, 1), // Top-left
+            new Vector2Int(1, -1), // Bottom-right
+            new Vector2Int(-1, -1) // Bottom-left
+        };
+
+        foreach (var direction in directions)
+        {
+            Vector2Int adjacentPosition = plantPosition + direction;
+
+            // Check if the position is within bounds and walkable
+            if (GameTerrainwalkable[adjacentPosition.x, adjacentPosition.y])
+            {
+                return adjacentPosition; // Return the first valid position
+            }
+        }
+
+        // If no valid position is found, return the plant's position as fallback
+        return plantPosition;
+    }
+
 }
+
 
 public struct TerrainData
 {
