@@ -1,8 +1,10 @@
-public enum AnimalState
+public enum State
 {
-    SearchingForFood,
-    SearchingForWater,
+    Exploring,
+    GoingForFood,
+    GoingForWater,
     Resting,
     Reproducing,
+    FindingMate,
     AvoidingPredator
 }
