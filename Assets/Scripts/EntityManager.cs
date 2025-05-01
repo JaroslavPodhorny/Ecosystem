@@ -9,7 +9,7 @@ public class EntityManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
             return;
         }
         Instance = this;
@@ -19,11 +19,30 @@ public class EntityManager : MonoBehaviour
     public List<Plant> plants = new List<Plant>();
     public List<Animal> predators = new List<Animal>();
 
-    public void RegisterAnimal(Animal animal) => animals.Add(animal);
-    public void UnregisterAnimal(Animal animal) => animals.Remove(animal);
+    public void RegisterEntity(Entity entity)
+    {
+        if (entity is Animal animal)
+        {
+            animals.Add(animal);
+        }
+        else if (entity is Plant plant)
+        {
+            plants.Add(plant);
+        }
+    }
 
-    public void RegisterPlant(Plant plant) => plants.Add(plant);
-    public void UnregisterPlant(Plant plant) => plants.Remove(plant);
+    public void UnregisterEntity(Entity entity)
+    {
+        if (entity is Animal animal)
+        {
+            animals.Remove(animal);
+            predators.Remove(animal); // If it's a predator, remove it from predators as well
+        }
+        else if (entity is Plant plant)
+        {
+            plants.Remove(plant);
+        }
+    }
 
     public Plant queryPlant(Vector2Int position)
     {

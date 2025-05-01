@@ -6,14 +6,7 @@ public static class Pathfinding
 {
     public static List<Vector2Int> FindPath(Vector2Int startcoor, Vector2Int endcoor)
     {
-        // Look up the GameTerrain to get TerrainData.
-        GameTerrain terrain = Object.FindFirstObjectByType<GameTerrain>();
-        if (terrain == null)
-        {
-            Debug.LogError("No GameTerrain found in the scene!");
-            return new List<Vector2Int>();
-        }
-        TerrainData terrainData = terrain.terrainData;
+        TerrainData terrainData = GameTerrain.terrainData;
 
         // A* setup
         List<Vector2Int> openSet = new List<Vector2Int> { startcoor };
@@ -106,7 +99,7 @@ public static class Pathfinding
                     if (neighbor.x >= 0 && neighbor.x < terrainData.size &&
                         neighbor.y >= 0 && neighbor.y < terrainData.size)
                     {
-                        if (terrainData.walkable[neighbor.x, neighbor.y])
+                        if (terrainData.walkable[neighbor.x, neighbor.y] || neighbor.x == startcoor.x && neighbor.y == startcoor.y)
                             neighbors.Add(neighbor);
                     }
                 }

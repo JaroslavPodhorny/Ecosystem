@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class GameTerrain : MonoBehaviour
 {
-    public TerrainData terrainData;
+    public static TerrainData terrainData;
 
     [Header("Settings")]
     public static int size = 50;
@@ -26,7 +26,7 @@ public class GameTerrain : MonoBehaviour
     public GameObject treePrefab2;
 
     private float[,] noisemap = GenerateNoiseMap(size, size, 20f, offsetX, offsetY);
-    public bool[,] walkable = new bool[size, size];
+    public static bool[,] walkable = new bool[size, size];
     public bool[,] shore = new bool[size, size];
 
     void Awake()
@@ -98,7 +98,8 @@ public class GameTerrain : MonoBehaviour
                 if (value > treeLevel && UnityEngine.Random.Range(0f, 1f) < 0.1f)
                 {
                     GameObject treeToSpawn = UnityEngine.Random.Range(0f, 1f) < 0.5f ? treePrefab : treePrefab2;
-                    Instantiate(treeToSpawn, position, Quaternion.identity);
+                    Quaternion randomRotation = Quaternion.Euler(0, UnityEngine.Random.Range(0f, 360f), 0);
+                    Instantiate(treeToSpawn, position, randomRotation);
 
                     walkable[x, y] = false;
                 }
@@ -160,36 +161,29 @@ public class GameTerrain : MonoBehaviour
         }
     }
 
-    public static Vector2Int ChooseAdjacentPosition(Vector2Int plantPosition)
+    public static List<Vector2Int> WalkableNeighbours(Vector2Int position)
     {
-        // Define all 8 possible directions (cardinal + diagonal)
-        Vector2Int[] directions = new Vector2Int[]
-        {
-            new Vector2Int(1, 0),  // Right
-            new Vector2Int(-1, 0), // Left
-            new Vector2Int(0, 1),  // Up
-            new Vector2Int(0, -1), // Down
-            new Vector2Int(1, 1),  // Top-right
-            new Vector2Int(-1, 1), // Top-left
-            new Vector2Int(1, -1), // Bottom-right
-            new Vector2Int(-1, -1) // Bottom-left
-        };
+        List<Vector2Int> neighbours = new List<Vector2Int>();
 
-        foreach (var direction in directions)
+        for (int dx = -1; dx <= 1; dx++)
         {
-            Vector2Int adjacentPosition = plantPosition + direction;
-
-            // Check if the position is within bounds and walkable
-            if (GameTerrainwalkable[adjacentPosition.x, adjacentPosition.y])
+            for (int dy = -1; dy <= 1; dy++)
             {
-                return adjacentPosition; // Return the first valid position
+                if (dx == 0 && dy == 0) continue; // Skip the current position
+
+                Vector2Int neighbour = new Vector2Int(position.x + dx, position.y + dy);
+
+                if (neighbour.x >= 0 && neighbour.x < size && neighbour.y >= 0 && neighbour.y < size)
+                {
+                    if (terrainData.walkable[neighbour.x, neighbour.y])
+                    {
+                        neighbours.Add(neighbour);
+                    }
+                }
             }
         }
-
-        // If no valid position is found, return the plant's position as fallback
-        return plantPosition;
+        return neighbours;
     }
-
 }
 
 

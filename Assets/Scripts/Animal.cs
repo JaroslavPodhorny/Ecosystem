@@ -14,10 +14,10 @@ public class Animal : Entity
     AnimalGenes animalGenes;
 
     // Desires
-    protected float hunger = 0f;
-    protected float thirst = 0.01f;
-    protected float tiredness = 0f;
-    protected float reproductionUrge;
+    public float hunger = 0f;
+    public float thirst = 0.01f;
+    public float reproductionUrge;
+    //future use: plant/animal coexistence
     protected float plantSizeTreshold = 0.5f;
 
     private State currentState;
@@ -30,17 +30,23 @@ public class Animal : Entity
     bool isMoving = false;
     bool interacting = false;
 
+    static TerrainData terrainData;
+    Plant nearestPlant = null;
+
+
 
     void Start()
     {
+        terrainData = GameTerrain.terrainData;
+
+        terrainData.walkable[position.x, position.y] = false;
+
         animalGenes = AnimalGenes.GetRandomGenes();
-        EntityManager.Instance.RegisterAnimal(this);
+        EntityManager.Instance.RegisterEntity(this);
         position = new Vector2Int((int)transform.position.x, (int)transform.position.z);
 
         // debug values
-        reproductionUrge = 0.05f;
-        animalGenes.visionRange = 10;
-
+        reproductionUrge = 0.01f;
     }
     void Update()
     {
@@ -50,9 +56,7 @@ public class Animal : Entity
 
         if (hunger >= 1f || thirst >= 1f)
         {
-            //register death
-            Destroy(gameObject);
-
+            Die();
         }
         else if (isMoving)
         {
@@ -71,6 +75,10 @@ public class Animal : Entity
 
     void Move()
     {
+        // update walkable map
+        terrainData.walkable[position.x, position.y] = true;
+        terrainData.walkable[targetPosition.x, targetPosition.y] = false;
+
         Vector2 currentPosition = new Vector2(transform.position.x, transform.position.z);
         float distance = Vector2.Distance(currentPosition, targetPosition);
         if (distance > 0.1f)
@@ -96,7 +104,6 @@ public class Animal : Entity
         {
             { "hunger", hunger },
             { "thirst", thirst },
-            { "rest", tiredness },
             { "reproductionUrge", reproductionUrge }
         };
 
@@ -105,20 +112,34 @@ public class Animal : Entity
         switch (highestNeed)
         {
             case "hunger":
-                Plant nearestPlant = EntityManager.Instance.queryPlant(position);
+                nearestPlant = EntityManager.Instance.queryPlant(position);
                 if (nearestPlant != null)
                 {
-                    Debug.Log(position);
-                    Debug.Log(nearestPlant.position);
-                    if (path.Count == 0)
+                    float distance = Vector2.Distance(nearestPlant.position, position);
+                    Debug.Log($"Distance to nearest plant: {distance}");
+                    if (distance < animalGenes.visionRange)
                     {
-                        path = Pathfinding.FindPath(position, nearestPlant.position);
+                        List<Vector2Int> plantNeighbours = GameTerrain.WalkableNeighbours(nearestPlant.position);
+                        if (plantNeighbours.Count == 0) plantNeighbours.Add(position);
+                        int rnd = UnityEngine.Random.Range(0, plantNeighbours.Count - 1);
+                        Vector2Int targetTile = plantNeighbours[rnd];
+
+                        if (path.Count == 0)
+                        {
+                            path = Pathfinding.FindPath(position, targetTile);
+                        }
+                        currentState = State.GoingForFood;
+                        Debug.Log("Going for food.");
                     }
-                    Debug.Log($"Path found: {path.Count}");
-                    currentState = State.GoingForFood;
+                    else
+                    {
+                        Debug.Log("No food found within vision range, exploring.");
+                        currentState = State.Exploring;
+                    }
                 }
                 else
                 {
+                    Debug.Log("No plant found, exploring.");
                     currentState = State.Exploring;
                 }
                 Debug.Log("Hunger is the highest need.");
@@ -127,29 +148,17 @@ public class Animal : Entity
             case "thirst":
                 if (FindWater() != new Vector2Int(-1, -1))
                 {
-                    Debug.Log(position);
-                    Debug.Log(FindWater());
                     if (path.Count == 0)
                     {
                         path = Pathfinding.FindPath(position, FindWater());
                     }
-                    Debug.Log($"Path found: {path.Count}");
                     currentState = State.GoingForWater;
                 }
                 else
                 {
                     currentState = State.Exploring;
                 }
-
                 Debug.Log("Thirst is the highest need.");
-                break;
-
-            case "rest":
-
-                Debug.Log("Rest is the highest need.");
-                currentState = State.Resting;
-                interacting = true;
-                Interact();
                 break;
 
             case "reproductionUrge":
@@ -163,9 +172,6 @@ public class Animal : Entity
     {
         switch (currentState)
         {
-            case State.Exploring:
-
-                break;
             case State.GoingForFood:
                 if (currentPathIndex >= path.Count)
                 {
@@ -207,12 +213,20 @@ public class Animal : Entity
             case State.AvoidingPredator:
                 // Implement avoiding predator logic here
                 break;
+
+            case State.Exploring:
+                List<Vector2Int> neighbours = GameTerrain.WalkableNeighbours(position);
+                int rnd = UnityEngine.Random.Range(0, neighbours.Count - 1);
+                targetPosition = neighbours[rnd];
+                Move();
+                isMoving = true;
+                break;
         }
     }
 
     Vector2Int FindWater()
     {
-        bool[,] shoremap = FindFirstObjectByType<GameTerrain>().shore;
+        bool[,] shoremap = terrainData.shore;
         int visionRange = animalGenes.visionRange;
         Vector2Int currentPosition = new Vector2Int((int)transform.position.x, (int)transform.position.z);
 
@@ -244,7 +258,6 @@ public class Animal : Entity
         Debug.Log($"Closest shore found at: {closestShore}" + $" with distance: {closestDistance}");
         return closestShore;
     }
-
     void Interact()
     {
         switch (currentState)
@@ -263,21 +276,21 @@ public class Animal : Entity
                 }
                 break;
 
-            case State.Resting:
-                if (tiredness > 0)
+            case State.GoingForFood:
+                // Implement interaction logic for food here
+                Debug.Log("Eating food.");
+                float plantsize = nearestPlant.transform.localScale.x;
+                if (plantsize > 0f && hunger > 0)
                 {
-                    tiredness -= Time.deltaTime * 0.1f;
+                    plantsize -= Time.deltaTime * 0.1f;
+                    nearestPlant.transform.localScale = new Vector3(plantsize, plantsize, plantsize);
+                    hunger -= Time.deltaTime * 0.1f;
                 }
                 else
                 {
-                    tiredness = 0f;
+                    if (plantsize < 0) nearestPlant.Die();
                     interacting = false;
                 }
-                break;
-
-            case State.GoingForFood:
-                // Implement interaction logic for food here
-
                 break;
 
             case State.FindingMate:

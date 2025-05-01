@@ -13,18 +13,18 @@ public class Plant : Entity
 
     void Start()
     {
-        EntityManager.Instance.RegisterPlant(this);
+        EntityManager.Instance.RegisterEntity(this);
 
         position = new Vector2Int((int)transform.position.x, (int)transform.position.z);
 
         plantGenes = PlantGenes.GetRandomGenes();
         reproductionTime = plantGenes.reproductionInterval;
 
-        GameTerrain gameTerrain = FindFirstObjectByType<GameTerrain>();
-        terrainData = gameTerrain.terrainData;
+        terrainData = GameTerrain.terrainData;
         terrainData.walkable[position.x, position.y] = false;
 
         transform.localScale = Vector3.one * referencescale * plantGenes.size;
+        transform.rotation = Quaternion.Euler(0, Random.Range(0f, 360f), 0);
 
     }
 

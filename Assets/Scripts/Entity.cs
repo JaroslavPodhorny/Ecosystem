@@ -9,6 +9,8 @@ public abstract class Entity : MonoBehaviour
     public void Die()
     {
         //EnviromentManager.RegisterDeath(this);
+        GameTerrain.terrainData.walkable[position.x, position.y] = true;
+        EntityManager.Instance.UnregisterEntity(this);
         Destroy(gameObject);
     }
 
