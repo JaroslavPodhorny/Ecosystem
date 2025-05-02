@@ -43,8 +43,6 @@ public static class Pathfinding
                 {
                     offsetPath.Add(nodePath[i + 1] - nodePath[i]);
                 }
-                Debug.Log("Node Path: " + string.Join(" -> ", nodePath.Select(v => $"({v.x},{v.y})")));
-                Debug.Log("Offset Path: " + string.Join(", ", offsetPath.Select(v => $"({v.x},{v.y})")));
                 return offsetPath;
             }
             openSet.Remove(current);

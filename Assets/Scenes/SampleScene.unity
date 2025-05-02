@@ -541,63 +541,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animalPrefab: {fileID: 178871436249423384, guid: cd39073a515c05545889d0706d704ce7, type: 3}
   plantPrefab: {fileID: 2113576386443165751, guid: fb40b77b8b6ddcf4fb232f403aa2d71f, type: 3}
---- !u!1001 &1357039418
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 178871436249423384, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_Name
-      value: chicken (3)
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 14
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.7
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 21
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 662216282194314402, guid: cd39073a515c05545889d0706d704ce7, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: cd39073a515c05545889d0706d704ce7, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -606,5 +549,4 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 1130600482}
-  - {fileID: 1357039418}
   - {fileID: 136307004}

@@ -12,7 +12,7 @@ public class EnviromentManager : MonoBehaviour
 
     void InitialPopulation()
     {
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 50; i++)
         {
             Vector2Int randomPosition = new Vector2Int(Random.Range(0, GameTerrain.size), Random.Range(0, GameTerrain.size));
             if (GameTerrain.terrainData.walkable[randomPosition.x, randomPosition.y])

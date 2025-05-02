@@ -49,8 +49,8 @@ public class PlantGenes
     public static PlantGenes GetRandomGenes()
     {
         float size = Random.Range(0.5f, 1.5f);
-        float nutrition = Random.Range(0.5f, 1.5f);
-        float reproductionInterval = Random.Range(5f, 10f);
+        float nutrition = Random.Range(0.1f, 0.5f);
+        float reproductionInterval = Random.Range(7f, 14f);
 
         return new PlantGenes(size, nutrition, reproductionInterval);
     }

@@ -20,18 +20,20 @@ public class Animal : Entity
     //future use: plant/animal coexistence
     protected float plantSizeTreshold = 0.5f;
 
-    private State currentState;
+    [SerializeField] private State currentState;
 
     // Pathfinding data
     List<Vector2Int> path = new List<Vector2Int>();
     int currentPathIndex = 0;
-    Vector2Int targetPosition;
+    [SerializeField] Vector2Int targetPosition;
+    Vector2Int dir = Vector2Int.up;
 
     bool isMoving = false;
     bool interacting = false;
 
     static TerrainData terrainData;
     Plant nearestPlant = null;
+
 
 
 
@@ -72,26 +74,46 @@ public class Animal : Entity
             ExecuteAction();
         }
     }
-
     void Move()
     {
-        // update walkable map
+        if (terrainData.reserved[targetPosition.x, targetPosition.y])
+        {
+            isMoving = false;
+            Debug.Log("Tile is not walkable or already reserved.");
+            return;
+        }
+        // Reserve the tile for this frame
+        terrainData.reserved[targetPosition.x, targetPosition.y] = true;
+        // Smoothly rotate towards the target position
+        Vector3 targetPosition3D = new Vector3(targetPosition.x, transform.position.y, targetPosition.y);
+        Vector3 directionToTarget = (targetPosition3D - transform.position).normalized;
+        if (directionToTarget != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+            targetRotation *= Quaternion.Euler(0, 90, 0);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+        }
+
+        //calculate how much the animal should move
+        Vector2 currentPosition = new Vector2(transform.position.x, transform.position.z);
+        Vector2 direction = (targetPosition - currentPosition).normalized;
+        Vector3 movement = new Vector3(direction.x, 0, direction.y) * animalGenes.speed * Time.deltaTime;
+
+        // update grid position and walkable map
         terrainData.walkable[position.x, position.y] = true;
         terrainData.walkable[targetPosition.x, targetPosition.y] = false;
+        position = new Vector2Int(targetPosition.x, targetPosition.y);
 
-        Vector2 currentPosition = new Vector2(transform.position.x, transform.position.z);
+        //update the animal position
         float distance = Vector2.Distance(currentPosition, targetPosition);
-        if (distance > 0.1f)
+        if (distance > movement.magnitude + 0.001f)//small threshold to avoid floating point errors
         {
-            Vector2 direction = (targetPosition - currentPosition).normalized;
-            Vector3 movement = new Vector3(direction.x, 0, direction.y) * animalGenes.speed * Time.deltaTime;
             transform.position += movement;
         }
         else
         {
             //step was finished
             transform.position = new Vector3(targetPosition.x, transform.position.y, targetPosition.y);
-            position = new Vector2Int((int)targetPosition.x, (int)targetPosition.y);
             isMoving = false;
         }
     }
@@ -112,37 +134,20 @@ public class Animal : Entity
         switch (highestNeed)
         {
             case "hunger":
-                nearestPlant = EntityManager.Instance.queryPlant(position);
-                if (nearestPlant != null)
+                Vector2Int foodBorder = FindFoodBorder();
+                if (foodBorder != new Vector2Int(-1, -1))
                 {
-                    float distance = Vector2.Distance(nearestPlant.position, position);
-                    Debug.Log($"Distance to nearest plant: {distance}");
-                    if (distance < animalGenes.visionRange)
+                    if (foodBorder == position) interacting = true;
+                    else if (path.Count == 0)
                     {
-                        List<Vector2Int> plantNeighbours = GameTerrain.WalkableNeighbours(nearestPlant.position);
-                        if (plantNeighbours.Count == 0) plantNeighbours.Add(position);
-                        int rnd = UnityEngine.Random.Range(0, plantNeighbours.Count - 1);
-                        Vector2Int targetTile = plantNeighbours[rnd];
-
-                        if (path.Count == 0)
-                        {
-                            path = Pathfinding.FindPath(position, targetTile);
-                        }
-                        currentState = State.GoingForFood;
-                        Debug.Log("Going for food.");
+                        path = Pathfinding.FindPath(position, foodBorder);
                     }
-                    else
-                    {
-                        Debug.Log("No food found within vision range, exploring.");
-                        currentState = State.Exploring;
-                    }
+                    currentState = State.GoingForFood;
                 }
                 else
                 {
-                    Debug.Log("No plant found, exploring.");
                     currentState = State.Exploring;
                 }
-                Debug.Log("Hunger is the highest need.");
                 break;
 
             case "thirst":
@@ -158,11 +163,9 @@ public class Animal : Entity
                 {
                     currentState = State.Exploring;
                 }
-                Debug.Log("Thirst is the highest need.");
                 break;
 
             case "reproductionUrge":
-                Debug.Log("Reproduction is the highest need.");
                 currentState = State.FindingMate;
                 break;
         }
@@ -176,7 +179,6 @@ public class Animal : Entity
                 if (currentPathIndex >= path.Count)
                 {
                     interacting = true;
-                    Debug.Log("Reached the food source.");
                     path.Clear();
                     currentPathIndex = 0;
                 }
@@ -188,13 +190,12 @@ public class Animal : Entity
                     currentPathIndex++;
                 }
                 break;
+
             case State.GoingForWater:
-                Debug.Log("Going for water");
                 //if the path has been traversed start interacting and clear the path
                 if (currentPathIndex >= path.Count)
                 {
                     interacting = true;
-                    Debug.Log("Reached the water source.");
                     path.Clear();
                     currentPathIndex = 0;
                 }
@@ -216,7 +217,30 @@ public class Animal : Entity
 
             case State.Exploring:
                 List<Vector2Int> neighbours = GameTerrain.WalkableNeighbours(position);
+                if (neighbours.Count == 0)
+                {
+                    Debug.LogError("stuck");
+                    return;//stuck
+                }
+
+                //chance that its going to move towards the same direction
+                if (UnityEngine.Random.Range(0f, 1f) <= 0.8f)
+                {
+                    for (int i = 0; i < neighbours.Count; i++)
+                    {
+                        if (neighbours[i] - position == dir)
+                        {
+                            //found dir
+                            targetPosition = neighbours[i];
+                            Move();
+                            isMoving = true;
+                            return;
+                        }
+                    }
+                }
+
                 int rnd = UnityEngine.Random.Range(0, neighbours.Count - 1);
+                dir = neighbours[rnd] - position;
                 targetPosition = neighbours[rnd];
                 Move();
                 isMoving = true;
@@ -255,8 +279,28 @@ public class Animal : Entity
                 }
             }
         }
-        Debug.Log($"Closest shore found at: {closestShore}" + $" with distance: {closestDistance}");
         return closestShore;
+    }
+
+    Vector2Int FindFoodBorder()
+    {
+        //get the nearest neighboring tiles of a plant
+        nearestPlant = EntityManager.Instance.queryPlant(position);
+        List<Vector2Int> plantNeighbours = GameTerrain.WalkableNeighbours(nearestPlant.position);
+        float distance = Vector2.Distance(nearestPlant.position, position);
+
+        if (plantNeighbours.Count > 0 && distance < animalGenes.visionRange)
+        {
+            // choose random tile around the plant
+            int rnd = UnityEngine.Random.Range(0, plantNeighbours.Count - 1);
+            Vector2Int targetTile = plantNeighbours[rnd];
+            return targetTile;
+        }
+        else if (distance < 2f)
+        {
+            return position;
+        }
+        return new Vector2Int(-1, -1); // No food found
     }
     void Interact()
     {
@@ -264,7 +308,6 @@ public class Animal : Entity
         {
             case State.GoingForWater:
                 // Implement interaction logic for water here
-                Debug.Log("Drinking water.");
                 if (thirst > 0)
                 {
                     thirst -= Time.deltaTime * 0.1f;
@@ -278,7 +321,8 @@ public class Animal : Entity
 
             case State.GoingForFood:
                 // Implement interaction logic for food here
-                Debug.Log("Eating food.");
+                if (nearestPlant == null) break;
+
                 float plantsize = nearestPlant.transform.localScale.x;
                 if (plantsize > 0f && hunger > 0)
                 {

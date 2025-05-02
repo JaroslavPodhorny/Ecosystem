@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
@@ -33,6 +34,11 @@ public class GameTerrain : MonoBehaviour
     {
         GenerateEnviroment();
         terrainData = new TerrainData(size, walkable, shore);
+    }
+
+    void Update()
+    {
+        Array.Clear(terrainData.reserved, 0, terrainData.reserved.Length);
     }
 
     public static float[,] GenerateNoiseMap(int width, int height, float scale, float offsetX, float offsetY)
@@ -192,12 +198,15 @@ public struct TerrainData
     public bool[,] walkable;
     public bool[,] shore;
     public int size;
+    public bool[,] reserved;
 
     public TerrainData(int size, bool[,] walkable, bool[,] shore)
     {
         this.size = size;
         this.walkable = walkable;
         this.shore = shore;
+        reserved = new bool[GameTerrain.size, GameTerrain.size];
     }
+
 }
 

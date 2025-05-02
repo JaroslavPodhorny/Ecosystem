@@ -50,11 +50,12 @@ public class Plant : Entity
         bool withinBounds = newPosition.x >= 0 && newPosition.x < terrainData.size &&
         newPosition.y >= 0 && newPosition.y < terrainData.size;
 
-        if (walkable && withinBounds)
+        if (walkable && withinBounds && !terrainData.reserved[newPosition.x, newPosition.y])
         {
+            terrainData.reserved[newPosition.x, newPosition.y] = true;
             Plant newPlant = Instantiate(gameObject, new Vector3(newPosition.x, 0, newPosition.y), Quaternion.identity).GetComponent<Plant>();
             newPlant.plantGenes = PlantGenes.GetRandomGenes();
-            newPlant.position = position;
+            newPlant.position = newPosition;
 
         }
     }
